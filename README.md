@@ -94,3 +94,17 @@ now collects both.
 reported every tool as read-only (`write: Boolean(t.write)`, which no tool
 here ever set) -- so `habr_comment_create` would have been published as a read.
 Nothing imported it. The surviving copy in `t27-mcp` is untouched.
+
+## Secrets never enter the repository
+
+No password, API key, token or credentials file is committed, not even in docs or examples. Read secrets from the environment or from a gitignored file.
+
+The gate has three layers, all driven by [`.gitleaks.toml`](.gitleaks.toml):
+
+1. **pre-commit** (lefthook) scans staged changes with gitleaks.
+2. **pre-push** (lefthook) scans every commit that is not yet on a remote.
+3. **CI** ([`secret-scan`](.github/workflows/secret-scan.yml)) scans the PR range, so `--no-verify` does not get a secret past it.
+
+Set up once per clone: `brew install gitleaks lefthook && lefthook install`.
+
+A secret that was ever pushed is compromised. Removing it from the tree does not unpublish it, so rotate it at the provider.
